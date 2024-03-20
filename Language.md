@@ -16,6 +16,20 @@ do a programming language for Baroque this is how it would look like:
 return a + b
 ```
 
+Return can be replaced with `<`. This way we can easily support outputting html:
+When the routine is run by itself, this will print to the output buffer.
+
+```
+> baroque(routine/0.1)
+
+> a as float(123.456)  
+> b as string("And the combination is: ")
+
+< b, a
+```
+Will output "And the combination is: 123.456"
+However when the routine is included the result will be returned as string to the including routine. 
+
 Each file is a routine which may be executed independently, and returns a single result.
 Supported type are the same defined for the format.
 
