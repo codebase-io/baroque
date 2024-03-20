@@ -1,10 +1,59 @@
 # [The Baroque Data Transfer Format](https://baroquedt.io)
 
 > [!WARNING]  
-> This is very early days and you should not use this spec. in production.
-> Suggestions are welcomed, as we are looking to draft an initial v0.1 parser and extend to rich types.
+> This is very early days and you should not use this spec in production.
 
-### Why (more soon)
+### About
+
+**Baroque** is a data interchange format, for the web platform, that focuses on taking advantage of rich data types present in
+today's high level programming languages. Starting from a well-defined base of standard types, serializers/parsers
+can progressively add support for more specific and rich types.
+Vendors are welcomed to implement their own types.
+
+### Proposal 
+
+- UTF-8 as default encoding
+- 5 base data types, not nullable
+- rich data types, derived from base ones
+- support for tabulated formats
+- [space] character as separaror between names and values, or multiple values when tabulated
+- support for comments
+- backwards compatibility between versions
+- easy to extend, with vendor specific types
+
+## Base types (v0.1)
+
+ - *bool*: `1` or `0`
+ - *int*: -2<sup>10</sup> to 2<sup>10</sup>
+ - *string*: `"should be double-quoted"`
+ - *float*: floating point `0.9999` . Trimming allowed.
+ - *double*: fixed point `198.876`. Defaults to (6,2) if not specified. Trimming not allowed.
+
+### Derived types
+
+These types have own keywords, but are derived from the base ones.
+If the parser does not supports the type, it should convert to the one it derives from.
+
+ - `blob`: derived from string
+ - `date` and `datetime`: derived from string
+ - `enum`: derived from string
+ - `array`: derived from string
+ - `object`: derived from string
+
+### Composed/rich types
+
+Although for presentation pusposes we have used separate categories for this part, we can consider them derived types,
+however it's more clear that where these ones come from:
+
+ - `int(32)` and `int(64)`
+ - `string(email)`, `string(multiline)` or `string(uuid)`
+ - `datetime(ISO8601)` and `date('Y-m-d')`
+ - `enum(string)` or `enum(int(64))`
+ - 
+
+## The exchange format
+
+Suggestions are welcomed, as we are looking to draft an initial v0.1 parser and extend to rich types.
 
 ### How
 
@@ -83,7 +132,7 @@ userEmail:string(email)
 # The description of the document
 description:string(multiline(\n))
 # Date the document was last updated
-updatedAt:string(datetime(ISO8601))
+updatedAt:datetime(ISO8601)
 # Research papers linking the document, list of system uuids
 papers:enum(string(uuid))
 ```
@@ -122,15 +171,6 @@ websiteStatuses:object(json) {"google.com" "up", "example.com" "down"}
 
 databaseSchema:object(svg)
 ```
-
-## Base types (v0.1)
-
- - bool: `1` or `0`
- - int: `-2<sup>10</sup>` to `2<sup>10</sup>`
- - string: `"strings supported"`
- - float: floating point `0.9999` . Trimming allowed.
- - double: fixed point `198.876`. Defaults to (6,2) if not specified. Trimming not allowed.
- - 
 
 ## Custom types
 
