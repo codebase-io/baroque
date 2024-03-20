@@ -76,7 +76,7 @@ to: `a-Z`, `0-9`, `_` and `-`:
  
  
 Lines starting with `#` should always be treated as comments, and ignored when parsing values. 
-Parsers may add extensions that treat subsequent shebang `!#` lines as configuration parameters.   
+Parsers may add extensions that treat subsequent command `>` lines as configuration parameters.   
  
 ### Baroque documents
 
@@ -125,6 +125,31 @@ id:int(id) firstName:string lastName:string email:string(email) isAuthor:bool
 ```
 
 Suggestions are welcomed, as we are looking to draft an initial v0.1 parser and extend to rich types.
+
+
+### Make it yours
+
+Baroque is intended to be extensible, thus we only want to keep the spec to the minimum. 
+You can implement/derive your own types and your own vendor namespace, and please endicate in
+the header if you mantain compatibility with a standard version, so parsers know what to expect.
+
+```
+> baroque(vendor/1.0)
+> extends(0.3)
+
+field:type(v1) "..."
+...
+```
+
+Also if you're not planning to make it compabible with a standard spec, please indicate this too:
+
+```
+> baroque(vendor/1.0)
+> non-compatible
+
+field:type(v1) "..."
+...
+```
 
 ### How
 
