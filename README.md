@@ -1,5 +1,7 @@
 # [The Baroque Data Transfer Format](https://baroquedt.io)
 
+*Hey! If you are bored one day, invent a new data transfer format. No "strings" attached.*
+
 > [!WARNING]  
 > This is very early days and you should not use this spec in production.
 
@@ -29,7 +31,7 @@ Vendors are welcomed to implement their own types.
  - *float*: floating point `0.9999` . Trimming allowed.
  - *double*: fixed point `198.876`. Defaults to (6,2) if not specified. Trimming not allowed.
 
-### Derived types
+### Derived types (v0.2)
 
 These types have own keywords, but are derived from the base ones.
 If the parser does not supports the type, it should convert to the one it derives from.
@@ -40,7 +42,7 @@ If the parser does not supports the type, it should convert to the one it derive
  - `array`: derived from string
  - `object`: derived from string
 
-### Composed/rich types
+### Composed/Rich types (v0.3)
 
 Although for presentation pusposes we have used separate categories for this part, we can consider them derived types,
 however it's more clear that where these ones come from:
@@ -49,9 +51,78 @@ however it's more clear that where these ones come from:
  - `string(email)`, `string(multiline)` or `string(uuid)`
  - `datetime(ISO8601)` and `date('Y-m-d')`
  - `enum(string)` or `enum(int(64))`
- - 
+ - `array(string(int))` or `array(int(object))`
+ - check the full list here (TBD)
 
-## The exchange format
+Parsers should implement a "strict mode" feature, on by default, which will prevent converting from derived to 
+base types and throw error early. 
+When strict mode is off, parsers should convert all unrecognized types to the "string" type.
+
+## Versioning
+
+As you might have noticed, type support is part flagged with a semantic version, with the purpose of indicating 
+when new types are added by increasing the version. `0.3.1` will likely be the next. 
+
+## The exchange format (Spec)
+
+Although we started discussing the types, as they are first class citizens, the format derives 
+from a very simple and familiar approach: `variable value`.
+
+As noted previously, space is used to denote that something ends, for this reson variable names are limited
+to: `a-Z`, `0-9`, `_` and `-`:
+
+ - Valid names: `myFirstVariable`, `__debug` or `--debug`. 
+ - Invalid names: `my var` - contains space or `*flag` - contains forbidden character
+ 
+ 
+Lines starting with `#` should always be treated as comments, and ignored when parsing values. 
+Parsers may add extensions that treat subsequent shebang `!#` lines as configuration parameters.   
+ 
+### Baroque documents
+
+A *baroque* document can be presented in two forms: sigle and tabular. 
+
+#### Single document format
+
+```
+> baroque(v0.3)
+> charset(utf8mb4)
+> copyright('Space Force'/2024)
+
+# System document id
+_id:string(uuidv4) "abcd-efgh-ijkl-mnop"
+
+# The document version
+_version:float 0.3
+
+# Can be downloaded
+is_public:bool 1
+
+date_updated:datetime('Y-m-d H:i:s') "2024-03-20 15:10:10"
+```
+
+The first line, the shebang indicates this is a `baroque` document and declares the version.
+This line is optional, however baroque documents should always have a version decared: either 
+using this format, or specifying it via a HTTP Headers: `X-Baroque-Ver: 0.3`.
+If both the document and the HTTP header are present, the version declared in the document should 
+be used.     
+
+When a single document is parsed new lines `\n` or `\r\n` should be ignored. 
+For multiline strings, the type `string(multiline)` should be used as it's more flexible, and prevents 
+parsers from assuming where the lines should be.
+ 
+The heading of the document may also declare extensions. Each declaration should also start with `>`. 
+New lines and trailing spaces in the heading should be ignored.  
+
+#### Tabular document format
+
+```
+> baroque(v0.3/tabulated)
+
+id:int(id) firstName:string lastName:string email:string(email) isAuthor:bool
+21 "Josh" "Konstanza" "josh@baroquefmt.io" 0
+47 "Miriam" "Becky-Marr" "miriam@baroquefmt.io" 1
+```
 
 Suggestions are welcomed, as we are looking to draft an initial v0.1 parser and extend to rich types.
 
