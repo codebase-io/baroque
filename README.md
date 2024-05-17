@@ -36,32 +36,58 @@ Vendors are welcomed to implement their own types.
 These types have own keywords, but are derived from the base ones.
 If the parser does not supports the type, it should convert to the one it derives from.
 
- - `blob`: derived from string
- - `date` and `datetime`: derived from string
- - `enum`: derived from string
- - `array`: derived from string
- - `object`: derived from string
+ - `blob`: derived from string, for binary data
+ - `time`: derived from string, for indicatind timestamps, or time of day
+ - `datetime`: derived from string, for dates, with optional time component
+ - `interval`: derived from string, a date time interval or period, like "P1M"
+ - `list`: derived from string, a list of values
+ - `array`: derived from string, for key value pairs
+ - `object`: derived from string, for more complex structures
+ 
+ **Rule of thumb**:
+ When encountering an unknown type, with strict mode disabled, parsers should convert it to string,
+ reading up to 1KB of data. 
+ 
+ When string mode is `on` parsers should stop parsing any unknown type and fail early. 
 
 ### Composed/Rich types (v0.3)
 
 Although for presentation pusposes we have used separate categories for this part, we can consider them derived types,
 however it's more clear that where these ones come from:
 
- - `int(32)` and `int(64)`
+ - `int(16)`, `int(32)` and `int(64)`
  - `string(email)`, `string(multiline)` or `string(uuid)`
- - `datetime(ISO8601)` and `date('Y-m-d')`
- - `enum(string)` or `enum(int(64))`
+ - `time('H:i:s')`
+ - `datetime(ISO8601)` and `datetime('Y-m-d')`
+ - `list(string)` or `list(int(64))`
  - `array(string(int))` or `array(int(object))`
- - check the full list here (TBD)
+ - see here full list of v0.3 type spec (TBA)
 
 Parsers should implement a "strict mode" feature, on by default, which will prevent converting from derived to 
 base types and throw error early. 
 When strict mode is off, parsers should convert all unrecognized types to the "string" type.
 
+Also parsers should implement support for selecting or ignoring fields to parse. In other 
+words the user should be able to parse only the fields they need. 
+
 ## Versioning
 
-As you might have noticed, type support is part flagged with a semantic version, with the purpose of indicating 
-when new types are added by increasing the version. `0.3.1` will likely be the next. 
+As you might have noticed, type support is flagged with a semantic version, with the purpose of indicating 
+when new types are added by increasing the version. `0.4` will likely be the next: 
+
+```
+z . x . y
+|   |	|
+|	|	|
+|	|	|
+|	|	|
+|	|	|___ patch, for extensions 
+|	|
+|	|_______ minor, new types added
+|
+|
+|___________ major, backwards compatibility warning
+```
 
 ## The exchange format (Spec)
 
@@ -76,11 +102,13 @@ to: `a-Z`, `0-9`, `_` and `-`:
  
  
 Lines starting with `#` should always be treated as comments, and ignored when parsing values. 
-Parsers may add extensions that treat subsequent command `>` lines as configuration parameters.   
+The first line, may start with the 
+Parsers may add extensions that treat subsequent command `>` lines as parameters or extensions, 
+but ignored when not supported.
  
 ### Baroque documents
 
-A *baroque* document can be presented in two forms: sigle and tabular. 
+A *baroque* document can be presented in two forms: `single` and tabular or `table`. 
 
 #### Single document format
 
@@ -101,9 +129,9 @@ is_public:bool 1
 date_updated:datetime('Y-m-d H:i:s') "2024-03-20 15:10:10"
 ```
 
-The first line, the shebang indicates this is a `baroque` document and declares the version.
-This line is optional, however baroque documents should always have a version decared: either 
-using this format, or specifying it via a HTTP Headers: `X-Baroque-Ver: 0.3`.
+The first line,  this is a `baroque` document and declares the version.
+This line is optional, however baroque documents should always have a version declared: either 
+using this format, or specifying it via a HTTP Headers: `X-Baroque: 0.3` or `X-Baroque: 0.3/table`.
 If both the document and the HTTP header are present, the version declared in the document should 
 be used.     
 
@@ -114,15 +142,21 @@ parsers from assuming where the lines should be.
 The heading of the document may also declare extensions. Each declaration should also start with `>`. 
 New lines and trailing spaces in the heading should be ignored.  
 
-#### Tabular document format
+#### Table document format
 
 ```
-> baroque(v0.3/tabulated)
+> baroque(v0.3/table)
 
 id:int(id) firstName:string lastName:string email:string(email) isAuthor:bool
 21 "Josh" "Konstanza" "josh@baroquefmt.io" 0
 47 "Miriam" "Becky-Marr" "miriam@baroquefmt.io" 1
 ```
+
+The first line, indicates this document is presented as a table. This can also be specified via header.
+However parsers should always follow the `table` indication to determine this format. 
+Here, new lines `\n` or `\r\n` indicates a new record of values.
+
+ 
 
 Suggestions are welcomed, as we are looking to draft an initial v0.1 parser and extend to rich types.
 
